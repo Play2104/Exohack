@@ -62,8 +62,8 @@ end
 local pingBtn = createBtn("Place Ping (Here)", UDim2.new(0, 10, 0, 15), frame)
 local tpBtn = createBtn("TP Ping", UDim2.new(0, 10, 0, 65), frame)
 local scamBtnMenu = createBtn("Scam Normal", UDim2.new(0, 10, 0, 115), frame)
-local scamLBtn = createBtn("Scam -> Retour G", UDim2.new(0, 10, 0, 165), frame)
-local scamRBtn = createBtn("Scam -> Retour D", UDim2.new(0, 10, 0, 215), frame)
+local scamLBtn = createBtn("Scam -> Retour 10m G", UDim2.new(0, 10, 0, 165), frame)
+local scamRBtn = createBtn("Scam -> Retour 10m D", UDim2.new(0, 10, 0, 215), frame)
 local noclipBtn = createBtn("Noclip : OFF", UDim2.new(0, 10, 0, 265), frame)
 local flyBtn = createBtn("Fly : OFF", UDim2.new(0, 10, 0, 315), frame)
 
@@ -90,11 +90,11 @@ end
 
 local quickNoc = createSideBtn("NOC", UDim2.new(0, 0, 0, 0), Color3.fromRGB(200, 0, 0))
 local quickFly = createSideBtn("FLY", UDim2.new(0, 0, 0, 55), Color3.fromRGB(0, 200, 0))
-local quickL = createSideBtn("L", UDim2.new(0, 0, 0, 110), Color3.fromRGB(255, 170, 0))
-local quickR = createSideBtn("R", UDim2.new(0, 0, 0, 165), Color3.fromRGB(255, 170, 0))
+local quickL = createSideBtn("10L", UDim2.new(0, 0, 0, 110), Color3.fromRGB(255, 170, 0))
+local quickR = createSideBtn("10R", UDim2.new(0, 0, 0, 165), Color3.fromRGB(255, 170, 0))
 
 -------------------------------------------------
--- LOGIQUE SCAM AMÉLIORÉE (Retour décalé)
+-- LOGIQUE SCAM AMÉLIORÉE (Retour 10m)
 -------------------------------------------------
 local function doScam(mode)
     local char = player.Character
@@ -105,15 +105,13 @@ local function doScam(mode)
         char:SetPrimaryPartCFrame(CFrame.new(pingPosition))
         task.wait(1)
         
-        -- 2. RETOUR DÉCALÉ
+        -- 2. RETOUR AVEC DÉCALAGE DE 10 MÈTRES
         if mode == "normal" then
             char:SetPrimaryPartCFrame(originalCFrame)
         elseif mode == "left" then
-            -- Revient à la position de départ + 1m vers la gauche
-            char:SetPrimaryPartCFrame(originalCFrame * CFrame.new(-1, 0, 0))
+            char:SetPrimaryPartCFrame(originalCFrame * CFrame.new(-10, 0, 0)) -- -10m à gauche
         elseif mode == "right" then
-            -- Revient à la position de départ + 1m vers la droite
-            char:SetPrimaryPartCFrame(originalCFrame * CFrame.new(1, 0, 0))
+            char:SetPrimaryPartCFrame(originalCFrame * CFrame.new(10, 0, 0))  -- +10m à droite
         end
     end
 end
