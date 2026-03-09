@@ -1,0 +1,202 @@
+local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
+local RunService = game:GetService("RunService")
+
+local pingPosition = nil
+local noclipEnabled = false
+local flyEnabled = false
+local flySpeed = 100 
+local pingPart = nil
+
+-- --- GUI PRINCIPAL ---
+local gui = Instance.new("ScreenGui")
+gui.Name = "BestexoHub_V3_Final"
+gui.Parent = game.CoreGui
+gui.ResetOnSpawn = false
+
+-- BOUTON MENU (Haut Gauche)
+local toggle = Instance.new("TextButton", gui)
+toggle.Size = UDim2.new(0, 100, 0, 40)
+toggle.Position = UDim2.new(0, 10, 0, 10)
+toggle.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+toggle.BorderSizePixel = 2
+toggle.Text = "MENU"
+toggle.TextColor3 = Color3.new(1, 1, 1)
+toggle.Font = Enum.Font.SourceSansBold
+
+-- BOUTON SCAM NORMAL RAPIDE (Haut Droite)
+local quickScam = Instance.new("TextButton", gui)
+quickScam.Size = UDim2.new(0, 100, 0, 40)
+quickScam.Position = UDim2.new(1, -110, 0, 10)
+quickScam.BackgroundColor3 = Color3.fromRGB(0, 85, 255)
+quickScam.Text = "SCAM TP"
+quickScam.TextColor3 = Color3.new(1, 1, 1)
+quickScam.Font = Enum.Font.SourceSansBold
+Instance.new("UICorner", quickScam)
+
+-- FRAME PRINCIPALE
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 220, 0, 410)
+frame.Position = UDim2.new(0.5, -110, 0.2, 0)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.Visible = false
+frame.Active = true
+frame.Draggable = true
+Instance.new("UICorner", frame)
+
+toggle.MouseButton1Click:Connect(function() frame.Visible = not frame.Visible end)
+
+local function createBtn(text, pos, parent)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 200, 0, 40)
+    btn.Position = pos
+    btn.Text = text
+    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Font = Enum.Font.SourceSans
+    btn.Parent = parent
+    Instance.new("UICorner", btn)
+    return btn
+end
+
+local pingBtn = createBtn("Place Ping (Here)", UDim2.new(0, 10, 0, 15), frame)
+local tpBtn = createBtn("TP Ping", UDim2.new(0, 10, 0, 65), frame)
+local scamBtnMenu = createBtn("Scam Normal", UDim2.new(0, 10, 0, 115), frame)
+local scamLBtn = createBtn("Scam -> Retour G", UDim2.new(0, 10, 0, 165), frame)
+local scamRBtn = createBtn("Scam -> Retour D", UDim2.new(0, 10, 0, 215), frame)
+local noclipBtn = createBtn("Noclip : OFF", UDim2.new(0, 10, 0, 265), frame)
+local flyBtn = createBtn("Fly : OFF", UDim2.new(0, 10, 0, 315), frame)
+
+-------------------------------------------------
+-- BOUTONS RAPIDES (DROITE)
+-------------------------------------------------
+local sideFrame = Instance.new("Frame", gui)
+sideFrame.Size = UDim2.new(0, 60, 0, 260)
+sideFrame.Position = UDim2.new(0.95, -60, 0.3, 0)
+sideFrame.BackgroundTransparency = 1
+
+local function createSideBtn(text, pos, color)
+    local btn = Instance.new("TextButton", sideFrame)
+    btn.Size = UDim2.new(0, 50, 0, 50)
+    btn.Position = pos
+    btn.Text = text
+    btn.BackgroundColor3 = color
+    btn.BackgroundTransparency = 0.5
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Font = Enum.Font.SourceSansBold
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(1, 0)
+    return btn
+end
+
+local quickNoc = createSideBtn("NOC", UDim2.new(0, 0, 0, 0), Color3.fromRGB(200, 0, 0))
+local quickFly = createSideBtn("FLY", UDim2.new(0, 0, 0, 55), Color3.fromRGB(0, 200, 0))
+local quickL = createSideBtn("L", UDim2.new(0, 0, 0, 110), Color3.fromRGB(255, 170, 0))
+local quickR = createSideBtn("R", UDim2.new(0, 0, 0, 165), Color3.fromRGB(255, 170, 0))
+
+-------------------------------------------------
+-- LOGIQUE SCAM AMÉLIORÉE (Retour décalé)
+-------------------------------------------------
+local function doScam(mode)
+    local char = player.Character
+    if char and char:FindFirstChild("HumanoidRootPart") and pingPosition then
+        local originalCFrame = char.HumanoidRootPart.CFrame
+        
+        -- 1. TP AU PING
+        char:SetPrimaryPartCFrame(CFrame.new(pingPosition))
+        task.wait(1)
+        
+        -- 2. RETOUR DÉCALÉ
+        if mode == "normal" then
+            char:SetPrimaryPartCFrame(originalCFrame)
+        elseif mode == "left" then
+            -- Revient à la position de départ + 1m vers la gauche
+            char:SetPrimaryPartCFrame(originalCFrame * CFrame.new(-1, 0, 0))
+        elseif mode == "right" then
+            -- Revient à la position de départ + 1m vers la droite
+            char:SetPrimaryPartCFrame(originalCFrame * CFrame.new(1, 0, 0))
+        end
+    end
+end
+
+quickScam.MouseButton1Click:Connect(function() doScam("normal") end)
+scamBtnMenu.MouseButton1Click:Connect(function() doScam("normal") end)
+quickL.MouseButton1Click:Connect(function() doScam("left") end)
+scamLBtn.MouseButton1Click:Connect(function() doScam("left") end)
+quickR.MouseButton1Click:Connect(function() doScam("right") end)
+scamRBtn.MouseButton1Click:Connect(function() doScam("right") end)
+
+-------------------------------------------------
+-- LOGIQUE FLY & NOCLIP
+-------------------------------------------------
+local bodyVel, bodyGyro
+local function updateFly()
+    local char = player.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    if flyEnabled then
+        bodyVel = Instance.new("BodyVelocity", char.HumanoidRootPart)
+        bodyVel.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+        bodyGyro = Instance.new("BodyGyro", char.HumanoidRootPart)
+        bodyGyro.MaxTorque = Vector3.new(1e6, 1e6, 1e6)
+        char.Humanoid.PlatformStand = true
+    else
+        if bodyVel then bodyVel:Destroy() bodyVel = nil end
+        if bodyGyro then bodyGyro:Destroy() bodyGyro = nil end
+        char.Humanoid.PlatformStand = false
+    end
+    flyBtn.Text = flyEnabled and "Fly : ON" or "Fly : OFF"
+end
+
+flyBtn.MouseButton1Click:Connect(function() flyEnabled = not flyEnabled updateFly() end)
+quickFly.MouseButton1Click:Connect(function() flyEnabled = not flyEnabled updateFly() end)
+noclipBtn.MouseButton1Click:Connect(function() noclipEnabled = not noclipEnabled noclipBtn.Text = noclipEnabled and "Noclip : ON" or "Noclip : OFF" end)
+quickNoc.MouseButton1Click:Connect(function() noclipEnabled = not noclipEnabled noclipBtn.Text = noclipEnabled and "Noclip : ON" or "Noclip : OFF" end)
+
+-------------------------------------------------
+-- BOUCLE & PING ESP
+-------------------------------------------------
+RunService.RenderStepped:Connect(function()
+    local char = player.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    if noclipEnabled then
+        for _, v in pairs(char:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end
+    end
+    if flyEnabled and bodyVel and bodyGyro then
+        local cam = workspace.CurrentCamera
+        bodyVel.Velocity = (char.Humanoid.MoveDirection.Magnitude > 0) and (cam.CFrame.LookVector * flySpeed) or Vector3.new(0,0,0)
+        bodyGyro.CFrame = cam.CFrame
+    end
+end)
+
+pingBtn.MouseButton1Click:Connect(function()
+    local char = player.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        pingPosition = char.HumanoidRootPart.Position
+        if pingPart then pingPart:Destroy() end
+        pingPart = Instance.new("Part", workspace)
+        pingPart.Size = Vector3.new(2, 2, 2)
+        pingPart.Position = pingPosition
+        pingPart.Anchored = true
+        pingPart.CanCollide = false
+        pingPart.Color = Color3.fromRGB(255, 0, 0)
+        pingPart.Material = Enum.Material.Neon
+        pingPart.Shape = Enum.PartType.Ball
+        
+        local high = Instance.new("Highlight", pingPart)
+        high.FillColor = Color3.fromRGB(255, 0, 0)
+        
+        local bgui = Instance.new("BillboardGui", pingPart)
+        bgui.AlwaysOnTop = true
+        bgui.Size = UDim2.new(0,100,0,50)
+        bgui.StudsOffset = Vector3.new(0,3,0)
+        local tl = Instance.new("TextLabel", bgui)
+        tl.BackgroundTransparency = 1
+        tl.Size = UDim2.new(1,0,1,0)
+        tl.Text = "SCAM POINT"
+        tl.TextColor3 = Color3.new(1,1,1)
+        tl.Font = Enum.Font.SourceSansBold
+    end
+end)
+
+tpBtn.MouseButton1Click:Connect(function()
+    if pingPosition and player.Character then player.Character:MoveTo(pingPosition) end
+end)
