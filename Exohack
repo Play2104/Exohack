@@ -53,7 +53,6 @@ local function createBtn(text, pos, parent)
     btn.Text = text
     btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
     btn.TextColor3 = Color3.new(1, 1, 1)
-    btn.Font = Enum.Font.SourceSans
     btn.Parent = parent
     Instance.new("UICorner", btn)
     return btn
@@ -94,24 +93,26 @@ local quickL = createSideBtn("10L", UDim2.new(0, 0, 0, 110), Color3.fromRGB(255,
 local quickR = createSideBtn("10R", UDim2.new(0, 0, 0, 165), Color3.fromRGB(255, 170, 0))
 
 -------------------------------------------------
--- LOGIQUE SCAM AMÉLIORÉE (Retour 10m)
+-- LOGIQUE SCAM AMÉLIORÉE (Fix Caméra Rotation)
 -------------------------------------------------
 local function doScam(mode)
     local char = player.Character
-    if char and char:FindFirstChild("HumanoidRootPart") and pingPosition then
-        local originalCFrame = char.HumanoidRootPart.CFrame
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if root and pingPosition then
+        -- On enregistre la position ET la rotation (CFrame complet)
+        local originalCFrame = root.CFrame
         
-        -- 1. TP AU PING
-        char:SetPrimaryPartCFrame(CFrame.new(pingPosition))
+        -- 1. TP AU PING (On garde la rotation actuelle pour ne pas être désorienté)
+        root.CFrame = CFrame.new(pingPosition) * originalCFrame.Rotation
         task.wait(1)
         
-        -- 2. RETOUR AVEC DÉCALAGE DE 10 MÈTRES
+        -- 2. RETOUR AVEC DÉCALAGE ET ROTATION D'ORIGINE
         if mode == "normal" then
-            char:SetPrimaryPartCFrame(originalCFrame)
+            root.CFrame = originalCFrame
         elseif mode == "left" then
-            char:SetPrimaryPartCFrame(originalCFrame * CFrame.new(-10, 0, 0)) -- -10m à gauche
+            root.CFrame = originalCFrame * CFrame.new(-10, 0, 0)
         elseif mode == "right" then
-            char:SetPrimaryPartCFrame(originalCFrame * CFrame.new(10, 0, 0))  -- +10m à droite
+            root.CFrame = originalCFrame * CFrame.new(10, 0, 0)
         end
     end
 end
@@ -129,11 +130,12 @@ scamRBtn.MouseButton1Click:Connect(function() doScam("right") end)
 local bodyVel, bodyGyro
 local function updateFly()
     local char = player.Character
-    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
     if flyEnabled then
-        bodyVel = Instance.new("BodyVelocity", char.HumanoidRootPart)
+        bodyVel = Instance.new("BodyVelocity", root)
         bodyVel.MaxForce = Vector3.new(1e6, 1e6, 1e6)
-        bodyGyro = Instance.new("BodyGyro", char.HumanoidRootPart)
+        bodyGyro = Instance.new("BodyGyro", root)
         bodyGyro.MaxTorque = Vector3.new(1e6, 1e6, 1e6)
         char.Humanoid.PlatformStand = true
     else
@@ -141,23 +143,25 @@ local function updateFly()
         if bodyGyro then bodyGyro:Destroy() bodyGyro = nil end
         char.Humanoid.PlatformStand = false
     end
-    flyBtn.Text = flyEnabled and "Fly : ON" or "Fly : OFF"
 end
 
 flyBtn.MouseButton1Click:Connect(function() flyEnabled = not flyEnabled updateFly() end)
 quickFly.MouseButton1Click:Connect(function() flyEnabled = not flyEnabled updateFly() end)
 noclipBtn.MouseButton1Click:Connect(function() noclipEnabled = not noclipEnabled noclipBtn.Text = noclipEnabled and "Noclip : ON" or "Noclip : OFF" end)
-quickNoc.MouseButton1Click:Connect(function() noclipEnabled = not noclipEnabled noclipBtn.Text = noclipEnabled and "Noclip : ON" or "Noclip : OFF" end)
+quickNoc.MouseButton1Click:Connect(function() noclipEnabled = not noclipEnabled quickNoc.BackgroundTransparency = noclipEnabled and 0 or 0.5 end)
 
 -------------------------------------------------
 -- BOUCLE & PING ESP
 -------------------------------------------------
 RunService.RenderStepped:Connect(function()
     local char = player.Character
-    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    
     if noclipEnabled then
         for _, v in pairs(char:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end
     end
+    
     if flyEnabled and bodyVel and bodyGyro then
         local cam = workspace.CurrentCamera
         bodyVel.Velocity = (char.Humanoid.MoveDirection.Magnitude > 0) and (cam.CFrame.LookVector * flySpeed) or Vector3.new(0,0,0)
@@ -167,8 +171,9 @@ end)
 
 pingBtn.MouseButton1Click:Connect(function()
     local char = player.Character
-    if char and char:FindFirstChild("HumanoidRootPart") then
-        pingPosition = char.HumanoidRootPart.Position
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if root then
+        pingPosition = root.Position
         if pingPart then pingPart:Destroy() end
         pingPart = Instance.new("Part", workspace)
         pingPart.Size = Vector3.new(2, 2, 2)
@@ -178,20 +183,7 @@ pingBtn.MouseButton1Click:Connect(function()
         pingPart.Color = Color3.fromRGB(255, 0, 0)
         pingPart.Material = Enum.Material.Neon
         pingPart.Shape = Enum.PartType.Ball
-        
-        local high = Instance.new("Highlight", pingPart)
-        high.FillColor = Color3.fromRGB(255, 0, 0)
-        
-        local bgui = Instance.new("BillboardGui", pingPart)
-        bgui.AlwaysOnTop = true
-        bgui.Size = UDim2.new(0,100,0,50)
-        bgui.StudsOffset = Vector3.new(0,3,0)
-        local tl = Instance.new("TextLabel", bgui)
-        tl.BackgroundTransparency = 1
-        tl.Size = UDim2.new(1,0,1,0)
-        tl.Text = "SCAM POINT"
-        tl.TextColor3 = Color3.new(1,1,1)
-        tl.Font = Enum.Font.SourceSansBold
+        Instance.new("Highlight", pingPart).FillColor = Color3.fromRGB(255, 0, 0)
     end
 end)
 
