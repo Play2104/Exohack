@@ -6,18 +6,19 @@ local noclipEnabled = false
 local flyEnabled = false
 local flySpeed = 100 
 local pingPart = nil
+local caseDistance = 12 -- Distance exacte d'une case verte
+local tempsSurCible = 0.5 -- Temps passé sur l'ennemi avant le retour
 
 -- --- GUI PRINCIPAL ---
 local gui = Instance.new("ScreenGui")
-gui.Name = "Exohack_God_Mode_V7"
+gui.Name = "Exohack_Pro_V10"
 gui.Parent = game.CoreGui
 gui.ResetOnSpawn = false
 
--- FONCTION CREATION BOUTON SIMPLE
 local function makeBtn(name, text, pos, color, parent)
     local btn = Instance.new("TextButton")
     btn.Name = name
-    btn.Size = UDim2.new(0, 100, 0, 40)
+    btn.Size = UDim2.new(0, 110, 0, 40)
     btn.Position = pos
     btn.BackgroundColor3 = color
     btn.Text = text
@@ -28,47 +29,42 @@ local function makeBtn(name, text, pos, color, parent)
     return btn
 end
 
--- BOUTONS FIXES (CÔTÉ GAUCHE)
+-- BOUTONS FIXES GAUCHE
 local toggle = makeBtn("MenuBtn", "MENU", UDim2.new(0, 10, 0, 10), Color3.fromRGB(40, 40, 40), gui)
-local glitchL = makeBtn("GlitchL", "GLITCH 5X G", UDim2.new(0, 10, 0, 55), Color3.fromRGB(255, 0, 100), gui)
-local glitchR = makeBtn("GlitchR", "GLITCH 5X D", UDim2.new(0, 10, 0, 100), Color3.fromRGB(255, 0, 100), gui)
+local glitchL = makeBtn("GlitchL", "GLITCH CASE G", UDim2.new(0, 10, 0, 55), Color3.fromRGB(255, 0, 100), gui)
+local glitchR = makeBtn("GlitchR", "GLITCH CASE D", UDim2.new(0, 10, 0, 100), Color3.fromRGB(255, 0, 100), gui)
 
--- BOUTON FIXE (CÔTÉ DROIT)
-local quickScam = makeBtn("QuickScam", "SCAM TP", UDim2.new(1, -110, 0, 10), Color3.fromRGB(0, 85, 255), gui)
+-- BOUTON SCAM HAUT DROITE
+local quickScam = makeBtn("QuickScam", "SCAM TP", UDim2.new(1, -120, 0, 10), Color3.fromRGB(0, 85, 255), gui)
 
--- FRAME PRINCIPALE
-local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 220, 0, 410)
-frame.Position = UDim2.new(0.5, -110, 0.2, 0)
-frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-frame.Visible = false
-frame.Active = true
-frame.Draggable = true
-Instance.new("UICorner", frame)
+-------------------------------------------------
+-- BOUTONS RAPIDES DROITE (RONDS)
+-------------------------------------------------
+local sideFrame = Instance.new("Frame", gui)
+sideFrame.Size = UDim2.new(0, 60, 0, 300)
+sideFrame.Position = UDim2.new(0.95, -60, 0.35, 0)
+sideFrame.BackgroundTransparency = 1
 
-toggle.MouseButton1Click:Connect(function() frame.Visible = not frame.Visible end)
-
-local function createMenuBtn(text, pos)
-    local btn = Instance.new("TextButton", frame)
-    btn.Size = UDim2.new(0, 200, 0, 40)
+local function createSideBtn(text, pos, color)
+    local btn = Instance.new("TextButton", sideFrame)
+    btn.Size = UDim2.new(0, 55, 0, 55)
     btn.Position = pos
     btn.Text = text
-    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    btn.BackgroundColor3 = color
+    btn.BackgroundTransparency = 0.3
     btn.TextColor3 = Color3.new(1, 1, 1)
-    Instance.new("UICorner", btn)
+    btn.Font = Enum.Font.SourceSansBold
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(1, 0)
     return btn
 end
 
-local pingBtn = createMenuBtn("Place Ping (Here)", UDim2.new(0, 10, 0, 15))
-local tpBtn = createMenuBtn("TP Ping", UDim2.new(0, 10, 0, 65))
-local scamBtnMenu = createMenuBtn("Scam Normal", UDim2.new(0, 10, 0, 115))
-local scamLBtn = createMenuBtn("Scam -> 10m G", UDim2.new(0, 10, 0, 165))
-local scamRBtn = createMenuBtn("Scam -> 10m D", UDim2.new(0, 10, 0, 215))
-local noclipBtn = createMenuBtn("Noclip : OFF", UDim2.new(0, 10, 0, 265))
-local flyBtn = createMenuBtn("Fly : OFF", UDim2.new(0, 10, 0, 315))
+local quickNoc = createSideBtn("NOC", UDim2.new(0, 0, 0, 0), Color3.fromRGB(200, 0, 0))
+local quickFly = createSideBtn("FLY", UDim2.new(0, 0, 0, 60), Color3.fromRGB(0, 200, 0))
+local quickL = createSideBtn("C.G", UDim2.new(0, 0, 0, 120), Color3.fromRGB(255, 170, 0))
+local quickR = createSideBtn("C.D", UDim2.new(0, 0, 0, 180), Color3.fromRGB(255, 170, 0))
 
 -------------------------------------------------
--- LOGIQUE SCAM & GLITCH (Délai 1s au retour)
+-- LOGIQUE SCAM & GLITCH
 -------------------------------------------------
 local function doScam(mode, repeats)
     local char = player.Character
@@ -76,38 +72,32 @@ local function doScam(mode, repeats)
     if root and pingPosition then
         for i = 1, repeats do
             local currentCFrame = root.CFrame
-            
-            -- 1. TP AU PING (Attaque)
+            -- TP AU PING
             root.CFrame = CFrame.new(pingPosition) * currentCFrame.Rotation
-            task.wait(0.05) -- Très rapide sur la cible
+            task.wait(tempsSurCible)
             
-            -- 2. RETOUR (Sécurité)
+            -- RETOUR
             if mode == "normal" then
                 root.CFrame = currentCFrame
             elseif mode == "left" then
-                root.CFrame = currentCFrame * CFrame.new(-10, 0, 0)
+                root.CFrame = currentCFrame * CFrame.new(-caseDistance, 0, 0)
             elseif mode == "right" then
-                root.CFrame = currentCFrame * CFrame.new(10, 0, 0)
+                root.CFrame = currentCFrame * CFrame.new(caseDistance, 0, 0)
             end
             
-            -- 3. ATTENTE 1 SECONDE (Ta demande : délai avant le prochain saut)
-            if repeats > 1 then
-                task.wait(1) 
-            end
+            if repeats > 1 then task.wait(1) end
         end
     end
 end
 
--- Connexions
 glitchL.MouseButton1Click:Connect(function() doScam("left", 5) end)
 glitchR.MouseButton1Click:Connect(function() doScam("right", 5) end)
 quickScam.MouseButton1Click:Connect(function() doScam("normal", 1) end)
-scamBtnMenu.MouseButton1Click:Connect(function() doScam("normal", 1) end)
-scamLBtn.MouseButton1Click:Connect(function() doScam("left", 1) end)
-scamRBtn.MouseButton1Click:Connect(function() doScam("right", 1) end)
+quickL.MouseButton1Click:Connect(function() doScam("left", 1) end)
+quickR.MouseButton1Click:Connect(function() doScam("right", 1) end)
 
 -------------------------------------------------
--- LOGIQUE FLY & NOCLIP
+-- FLY & NOCLIP
 -------------------------------------------------
 local bodyVel, bodyGyro
 local function updateFly()
@@ -125,16 +115,18 @@ local function updateFly()
         if bodyGyro then bodyGyro:Destroy() bodyGyro = nil end
         char.Humanoid.PlatformStand = false
     end
-    flyBtn.Text = flyEnabled and "Fly : ON" or "Fly : OFF"
 end
 
-flyBtn.MouseButton1Click:Connect(function() flyEnabled = not flyEnabled updateFly() end)
+quickFly.MouseButton1Click:Connect(function() 
+    flyEnabled = not flyEnabled 
+    quickFly.BackgroundTransparency = flyEnabled and 0 or 0.3
+    updateFly() 
+end)
 
-local function toggleNoc()
-    noclipEnabled = not noclipEnabled
-    noclipBtn.Text = noclipEnabled and "Noclip : ON" or "Noclip : OFF"
-end
-noclipBtn.MouseButton1Click:Connect(toggleNoc)
+quickNoc.MouseButton1Click:Connect(function() 
+    noclipEnabled = not noclipEnabled 
+    quickNoc.BackgroundTransparency = noclipEnabled and 0 or 0.3
+end)
 
 RunService.RenderStepped:Connect(function()
     local char = player.Character
@@ -150,12 +142,19 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--------------------------------------------------
--- PING ESP
--------------------------------------------------
-pingBtn.MouseButton1Click:Connect(function()
-    local char = player.Character
-    local root = char and char:FindFirstChild("HumanoidRootPart")
+-- MENU PING (Invisibilité gérée par MENU)
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 200, 0, 80)
+frame.Position = UDim2.new(0.5, -100, 0.4, 0)
+frame.Visible = false
+frame.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+Instance.new("UICorner", frame)
+
+toggle.MouseButton1Click:Connect(function() frame.Visible = not frame.Visible end)
+
+local pBtn = makeBtn("PingSet", "SET PING HERE", UDim2.new(0.5, -55, 0, 20), Color3.fromRGB(60, 60, 60), frame)
+pBtn.MouseButton1Click:Connect(function()
+    local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
     if root then
         pingPosition = root.Position
         if pingPart then pingPart:Destroy() end
@@ -166,11 +165,6 @@ pingBtn.MouseButton1Click:Connect(function()
         pingPart.CanCollide = false
         pingPart.Color = Color3.fromRGB(255, 0, 0)
         pingPart.Material = Enum.Material.Neon
-        pingPart.Shape = Enum.PartType.Ball
-        Instance.new("Highlight", pingPart).FillColor = Color3.fromRGB(255, 0, 0)
+        Instance.new("Highlight", pingPart)
     end
-end)
-
-tpBtn.MouseButton1Click:Connect(function()
-    if pingPosition and player.Character then player.Character:MoveTo(pingPosition) end
 end)
