@@ -1,5 +1,4 @@
 local player = game.Players.LocalPlayer
-local mouse = player:GetMouse()
 local RunService = game:GetService("RunService")
 
 local pingPosition = nil
@@ -10,7 +9,7 @@ local pingPart = nil
 
 -- --- GUI PRINCIPAL ---
 local gui = Instance.new("ScreenGui")
-gui.Name = "BestexoHub_V3_Final"
+gui.Name = "Exohack_Ultra_V4"
 gui.Parent = game.CoreGui
 gui.ResetOnSpawn = false
 
@@ -19,19 +18,27 @@ local toggle = Instance.new("TextButton", gui)
 toggle.Size = UDim2.new(0, 100, 0, 40)
 toggle.Position = UDim2.new(0, 10, 0, 10)
 toggle.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-toggle.BorderSizePixel = 2
 toggle.Text = "MENU"
 toggle.TextColor3 = Color3.new(1, 1, 1)
 toggle.Font = Enum.Font.SourceSansBold
 
--- BOUTON SCAM NORMAL RAPIDE (Haut Droite)
+-- NOUVEAU BOUTON GLITCH 5X (Haut Gauche, sous le Menu)
+local glitchBtn = Instance.new("TextButton", gui)
+glitchBtn.Size = UDim2.new(0, 100, 0, 40)
+glitchBtn.Position = UDim2.new(0, 10, 0, 55)
+glitchBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 100)
+glitchBtn.Text = "GLITCH 5X"
+glitchBtn.TextColor3 = Color3.new(1, 1, 1)
+glitchBtn.Font = Enum.Font.SourceSansBold
+Instance.new("UICorner", glitchBtn)
+
+-- BOUTON SCAM RAPIDE (Haut Droite)
 local quickScam = Instance.new("TextButton", gui)
 quickScam.Size = UDim2.new(0, 100, 0, 40)
 quickScam.Position = UDim2.new(1, -110, 0, 10)
 quickScam.BackgroundColor3 = Color3.fromRGB(0, 85, 255)
 quickScam.Text = "SCAM TP"
 quickScam.TextColor3 = Color3.new(1, 1, 1)
-quickScam.Font = Enum.Font.SourceSansBold
 Instance.new("UICorner", quickScam)
 
 -- FRAME PRINCIPALE
@@ -61,71 +68,47 @@ end
 local pingBtn = createBtn("Place Ping (Here)", UDim2.new(0, 10, 0, 15), frame)
 local tpBtn = createBtn("TP Ping", UDim2.new(0, 10, 0, 65), frame)
 local scamBtnMenu = createBtn("Scam Normal", UDim2.new(0, 10, 0, 115), frame)
-local scamLBtn = createBtn("Scam -> Retour 10m G", UDim2.new(0, 10, 0, 165), frame)
-local scamRBtn = createBtn("Scam -> Retour 10m D", UDim2.new(0, 10, 0, 215), frame)
+local scamLBtn = createBtn("Scam -> 10m G", UDim2.new(0, 10, 0, 165), frame)
+local scamRBtn = createBtn("Scam -> 10m D", UDim2.new(0, 10, 0, 215), frame)
 local noclipBtn = createBtn("Noclip : OFF", UDim2.new(0, 10, 0, 265), frame)
 local flyBtn = createBtn("Fly : OFF", UDim2.new(0, 10, 0, 315), frame)
 
 -------------------------------------------------
--- BOUTONS RAPIDES (DROITE)
+-- LOGIQUE SCAM & GLITCH (5X répétition / 0.05s)
 -------------------------------------------------
-local sideFrame = Instance.new("Frame", gui)
-sideFrame.Size = UDim2.new(0, 60, 0, 260)
-sideFrame.Position = UDim2.new(0.95, -60, 0.3, 0)
-sideFrame.BackgroundTransparency = 1
-
-local function createSideBtn(text, pos, color)
-    local btn = Instance.new("TextButton", sideFrame)
-    btn.Size = UDim2.new(0, 50, 0, 50)
-    btn.Position = pos
-    btn.Text = text
-    btn.BackgroundColor3 = color
-    btn.BackgroundTransparency = 0.5
-    btn.TextColor3 = Color3.new(1, 1, 1)
-    btn.Font = Enum.Font.SourceSansBold
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(1, 0)
-    return btn
-end
-
-local quickNoc = createSideBtn("NOC", UDim2.new(0, 0, 0, 0), Color3.fromRGB(200, 0, 0))
-local quickFly = createSideBtn("FLY", UDim2.new(0, 0, 0, 55), Color3.fromRGB(0, 200, 0))
-local quickL = createSideBtn("10L", UDim2.new(0, 0, 0, 110), Color3.fromRGB(255, 170, 0))
-local quickR = createSideBtn("10R", UDim2.new(0, 0, 0, 165), Color3.fromRGB(255, 170, 0))
-
--------------------------------------------------
--- LOGIQUE SCAM AMÉLIORÉE (Fix Caméra Rotation)
--------------------------------------------------
-local function doScam(mode)
+local function doScam(mode, repeats)
     local char = player.Character
     local root = char and char:FindFirstChild("HumanoidRootPart")
     if root and pingPosition then
-        -- On enregistre la position ET la rotation (CFrame complet)
-        local originalCFrame = root.CFrame
-        
-        -- 1. TP AU PING (On garde la rotation actuelle pour ne pas être désorienté)
-        root.CFrame = CFrame.new(pingPosition) * originalCFrame.Rotation
-        task.wait(1)
-        
-        -- 2. RETOUR AVEC DÉCALAGE ET ROTATION D'ORIGINE
-        if mode == "normal" then
-            root.CFrame = originalCFrame
-        elseif mode == "left" then
-            root.CFrame = originalCFrame * CFrame.new(-10, 0, 0)
-        elseif mode == "right" then
-            root.CFrame = originalCFrame * CFrame.new(10, 0, 0)
+        for i = 1, repeats do
+            local originalCFrame = root.CFrame
+            
+            -- TP AU PING
+            root.CFrame = CFrame.new(pingPosition) * originalCFrame.Rotation
+            task.wait(0.05) -- 50ms
+            
+            -- RETOUR
+            if mode == "normal" then
+                root.CFrame = originalCFrame
+            elseif mode == "left" then
+                root.CFrame = originalCFrame * CFrame.new(-10, 0, 0)
+            elseif mode == "right" then
+                root.CFrame = originalCFrame * CFrame.new(10, 0, 0)
+            end
+            task.wait(0.05)
         end
     end
 end
 
-quickScam.MouseButton1Click:Connect(function() doScam("normal") end)
-scamBtnMenu.MouseButton1Click:Connect(function() doScam("normal") end)
-quickL.MouseButton1Click:Connect(function() doScam("left") end)
-scamLBtn.MouseButton1Click:Connect(function() doScam("left") end)
-quickR.MouseButton1Click:Connect(function() doScam("right") end)
-scamRBtn.MouseButton1Click:Connect(function() doScam("right") end)
+-- Connexions
+glitchBtn.MouseButton1Click:Connect(function() doScam("normal", 5) end) -- 5 fois super vite
+quickScam.MouseButton1Click:Connect(function() doScam("normal", 1) end)
+scamBtnMenu.MouseButton1Click:Connect(function() doScam("normal", 1) end)
+scamLBtn.MouseButton1Click:Connect(function() doScam("left", 1) end)
+scamRBtn.MouseButton1Click:Connect(function() doScam("right", 1) end)
 
 -------------------------------------------------
--- LOGIQUE FLY & NOCLIP
+-- RESTE DU SCRIPT (FLY, NOCLIP, PING)
 -------------------------------------------------
 local bodyVel, bodyGyro
 local function updateFly()
@@ -146,22 +129,15 @@ local function updateFly()
 end
 
 flyBtn.MouseButton1Click:Connect(function() flyEnabled = not flyEnabled updateFly() end)
-quickFly.MouseButton1Click:Connect(function() flyEnabled = not flyEnabled updateFly() end)
 noclipBtn.MouseButton1Click:Connect(function() noclipEnabled = not noclipEnabled noclipBtn.Text = noclipEnabled and "Noclip : ON" or "Noclip : OFF" end)
-quickNoc.MouseButton1Click:Connect(function() noclipEnabled = not noclipEnabled quickNoc.BackgroundTransparency = noclipEnabled and 0 or 0.5 end)
 
--------------------------------------------------
--- BOUCLE & PING ESP
--------------------------------------------------
 RunService.RenderStepped:Connect(function()
     local char = player.Character
     local root = char and char:FindFirstChild("HumanoidRootPart")
     if not root then return end
-    
     if noclipEnabled then
         for _, v in pairs(char:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end
     end
-    
     if flyEnabled and bodyVel and bodyGyro then
         local cam = workspace.CurrentCamera
         bodyVel.Velocity = (char.Humanoid.MoveDirection.Magnitude > 0) and (cam.CFrame.LookVector * flySpeed) or Vector3.new(0,0,0)
