@@ -6,12 +6,13 @@ local noclipEnabled = false
 local flyEnabled = false
 local flySpeed = 100 
 local pingPart = nil
-local caseDistance = 12 -- Distance exacte d'une case verte
-local tempsSurCible = 0.5 -- Temps passé sur l'ennemi avant le retour
+local caseDistance = 12 -- Distance d'une case (utilisée pour les Glitchs)
+local tempsSurCible = 0.5 
+local tempsSecurite = 1 
 
 -- --- GUI PRINCIPAL ---
 local gui = Instance.new("ScreenGui")
-gui.Name = "Exohack_Pro_V10"
+gui.Name = "Exohack_Pro_V11"
 gui.Parent = game.CoreGui
 gui.ResetOnSpawn = false
 
@@ -38,11 +39,11 @@ local glitchR = makeBtn("GlitchR", "GLITCH CASE D", UDim2.new(0, 10, 0, 100), Co
 local quickScam = makeBtn("QuickScam", "SCAM TP", UDim2.new(1, -120, 0, 10), Color3.fromRGB(0, 85, 255), gui)
 
 -------------------------------------------------
--- BOUTONS RAPIDES DROITE (RONDS)
+-- BOUTONS RAPIDES DROITE (NOC & FLY UNIQUEMENT)
 -------------------------------------------------
 local sideFrame = Instance.new("Frame", gui)
-sideFrame.Size = UDim2.new(0, 60, 0, 300)
-sideFrame.Position = UDim2.new(0.95, -60, 0.35, 0)
+sideFrame.Size = UDim2.new(0, 60, 0, 120)
+sideFrame.Position = UDim2.new(0.95, -60, 0.45, 0)
 sideFrame.BackgroundTransparency = 1
 
 local function createSideBtn(text, pos, color)
@@ -60,11 +61,9 @@ end
 
 local quickNoc = createSideBtn("NOC", UDim2.new(0, 0, 0, 0), Color3.fromRGB(200, 0, 0))
 local quickFly = createSideBtn("FLY", UDim2.new(0, 0, 0, 60), Color3.fromRGB(0, 200, 0))
-local quickL = createSideBtn("C.G", UDim2.new(0, 0, 0, 120), Color3.fromRGB(255, 170, 0))
-local quickR = createSideBtn("C.D", UDim2.new(0, 0, 0, 180), Color3.fromRGB(255, 170, 0))
 
 -------------------------------------------------
--- LOGIQUE SCAM & GLITCH
+-- LOGIQUE SCAM & GLITCH (CAMÉRA FIXE)
 -------------------------------------------------
 local function doScam(mode, repeats)
     local char = player.Character
@@ -72,11 +71,11 @@ local function doScam(mode, repeats)
     if root and pingPosition then
         for i = 1, repeats do
             local currentCFrame = root.CFrame
-            -- TP AU PING
+            -- TP AU PING (Garde la rotation actuelle)
             root.CFrame = CFrame.new(pingPosition) * currentCFrame.Rotation
             task.wait(tempsSurCible)
             
-            -- RETOUR
+            -- RETOUR (Garde la rotation actuelle)
             if mode == "normal" then
                 root.CFrame = currentCFrame
             elseif mode == "left" then
@@ -85,7 +84,7 @@ local function doScam(mode, repeats)
                 root.CFrame = currentCFrame * CFrame.new(caseDistance, 0, 0)
             end
             
-            if repeats > 1 then task.wait(1) end
+            if repeats > 1 then task.wait(tempsSecurite) end
         end
     end
 end
@@ -93,11 +92,9 @@ end
 glitchL.MouseButton1Click:Connect(function() doScam("left", 5) end)
 glitchR.MouseButton1Click:Connect(function() doScam("right", 5) end)
 quickScam.MouseButton1Click:Connect(function() doScam("normal", 1) end)
-quickL.MouseButton1Click:Connect(function() doScam("left", 1) end)
-quickR.MouseButton1Click:Connect(function() doScam("right", 1) end)
 
 -------------------------------------------------
--- FLY & NOCLIP
+-- LOGIQUE FLY & NOCLIP
 -------------------------------------------------
 local bodyVel, bodyGyro
 local function updateFly()
@@ -142,7 +139,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- MENU PING (Invisibilité gérée par MENU)
+-- MENU PING
 local frame = Instance.new("Frame", gui)
 frame.Size = UDim2.new(0, 200, 0, 80)
 frame.Position = UDim2.new(0.5, -100, 0.4, 0)
