@@ -6,13 +6,13 @@ local noclipEnabled = false
 local flyEnabled = false
 local flySpeed = 100 
 local pingPart = nil
-local caseDistance = 12 -- Distance d'une case (utilisée pour les Glitchs)
+local caseDistance = 12 
 local tempsSurCible = 0.5 
 local tempsSecurite = 1 
 
 -- --- GUI PRINCIPAL ---
 local gui = Instance.new("ScreenGui")
-gui.Name = "Exohack_Pro_V11"
+gui.Name = "Exohack_Pro_V12"
 gui.Parent = game.CoreGui
 gui.ResetOnSpawn = false
 
@@ -38,9 +38,7 @@ local glitchR = makeBtn("GlitchR", "GLITCH CASE D", UDim2.new(0, 10, 0, 100), Co
 -- BOUTON SCAM HAUT DROITE
 local quickScam = makeBtn("QuickScam", "SCAM TP", UDim2.new(1, -120, 0, 10), Color3.fromRGB(0, 85, 255), gui)
 
--------------------------------------------------
--- BOUTONS RAPIDES DROITE (NOC & FLY UNIQUEMENT)
--------------------------------------------------
+-- BOUTONS RAPIDES DROITE
 local sideFrame = Instance.new("Frame", gui)
 sideFrame.Size = UDim2.new(0, 60, 0, 120)
 sideFrame.Position = UDim2.new(0.95, -60, 0.45, 0)
@@ -63,7 +61,7 @@ local quickNoc = createSideBtn("NOC", UDim2.new(0, 0, 0, 0), Color3.fromRGB(200,
 local quickFly = createSideBtn("FLY", UDim2.new(0, 0, 0, 60), Color3.fromRGB(0, 200, 0))
 
 -------------------------------------------------
--- LOGIQUE SCAM & GLITCH (CAMÉRA FIXE)
+-- LOGIQUE SCAM & GLITCH
 -------------------------------------------------
 local function doScam(mode, repeats)
     local char = player.Character
@@ -71,11 +69,8 @@ local function doScam(mode, repeats)
     if root and pingPosition then
         for i = 1, repeats do
             local currentCFrame = root.CFrame
-            -- TP AU PING (Garde la rotation actuelle)
             root.CFrame = CFrame.new(pingPosition) * currentCFrame.Rotation
             task.wait(tempsSurCible)
-            
-            -- RETOUR (Garde la rotation actuelle)
             if mode == "normal" then
                 root.CFrame = currentCFrame
             elseif mode == "left" then
@@ -83,7 +78,6 @@ local function doScam(mode, repeats)
             elseif mode == "right" then
                 root.CFrame = currentCFrame * CFrame.new(caseDistance, 0, 0)
             end
-            
             if repeats > 1 then task.wait(tempsSecurite) end
         end
     end
@@ -94,7 +88,7 @@ glitchR.MouseButton1Click:Connect(function() doScam("right", 5) end)
 quickScam.MouseButton1Click:Connect(function() doScam("normal", 1) end)
 
 -------------------------------------------------
--- LOGIQUE FLY & NOCLIP
+-- LOGIQUE FLY LIBRE (JOYSTICK) & NOCLIP
 -------------------------------------------------
 local bodyVel, bodyGyro
 local function updateFly()
@@ -128,13 +122,22 @@ end)
 RunService.RenderStepped:Connect(function()
     local char = player.Character
     local root = char and char:FindFirstChild("HumanoidRootPart")
-    if not root then return end
+    local hum = char and char:FindFirstChild("Humanoid")
+    if not root or not hum then return end
+
     if noclipEnabled then
         for _, v in pairs(char:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end
     end
+
     if flyEnabled and bodyVel and bodyGyro then
         local cam = workspace.CurrentCamera
-        bodyVel.Velocity = (char.Humanoid.MoveDirection.Magnitude > 0) and (cam.CFrame.LookVector * flySpeed) or Vector3.new(0,0,0)
+        -- DIRECTION BASÉE SUR LE JOYSTICK/TOUCHES
+        local moveDir = hum.MoveDirection
+        if moveDir.Magnitude > 0 then
+            bodyVel.Velocity = moveDir * flySpeed
+        else
+            bodyVel.Velocity = Vector3.new(0, 0, 0)
+        end
         bodyGyro.CFrame = cam.CFrame
     end
 end)
