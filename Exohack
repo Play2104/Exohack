@@ -12,7 +12,7 @@ local tempsSecurite = 1
 
 -- --- GUI PRINCIPAL ---
 local gui = Instance.new("ScreenGui")
-gui.Name = "Exohack_Pro_V12"
+gui.Name = "Exohack_Pro_V13"
 gui.Parent = game.CoreGui
 gui.ResetOnSpawn = false
 
@@ -88,7 +88,7 @@ glitchR.MouseButton1Click:Connect(function() doScam("right", 5) end)
 quickScam.MouseButton1Click:Connect(function() doScam("normal", 1) end)
 
 -------------------------------------------------
--- LOGIQUE FLY LIBRE (JOYSTICK) & NOCLIP
+-- LOGIQUE FLY AMÉLIORÉE (Joystick + Caméra)
 -------------------------------------------------
 local bodyVel, bodyGyro
 local function updateFly()
@@ -131,10 +131,20 @@ RunService.RenderStepped:Connect(function()
 
     if flyEnabled and bodyVel and bodyGyro then
         local cam = workspace.CurrentCamera
-        -- DIRECTION BASÉE SUR LE JOYSTICK/TOUCHES
         local moveDir = hum.MoveDirection
+        
         if moveDir.Magnitude > 0 then
-            bodyVel.Velocity = moveDir * flySpeed
+            -- On projette la direction du joystick dans l'orientation de la caméra
+            -- Cela permet de monter si on regarde vers le haut et qu'on avance
+            local look = cam.CFrame.LookVector
+            local right = cam.CFrame.RightVector
+            local up = cam.CFrame.UpVector
+            
+            -- Calcul de la vélocité 3D
+            bodyVel.Velocity = (look * -hum.MoveDirection.Z + right * hum.MoveDirection.X + up * 0).Unit * flySpeed
+            
+            -- Petit correctif pour monter/descendre plus facilement avec l'angle de vue
+            bodyVel.Velocity = (cam.CFrame:VectorToWorldSpace(Vector3.new(hum.MoveDirection.X, 0, hum.MoveDirection.Z))) * flySpeed
         else
             bodyVel.Velocity = Vector3.new(0, 0, 0)
         end
